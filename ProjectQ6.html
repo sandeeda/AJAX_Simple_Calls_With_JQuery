@@ -1,0 +1,154 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Question1</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css"
+      integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+      crossorigin="anonymous"
+    />
+    <script
+      src="https://code.jquery.com/jquery-3.6.0.js"
+      integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk="
+      crossorigin="anonymous"
+    ></script>
+  </head>
+  <body>
+    <script>
+      $(document).ready(function () {
+        $("button").click(function () {
+          //alert("here");
+          var countryJson;
+          var ratesJson;
+          var icon;
+          var output = "";
+          $("#data-table").html(
+            "<tr><th>Country Name</th><th>Region</th><th>Area</th><th>Flag(image)</th><th>NativeName</th><th>Borders</th><th>Active cases per million</th><th>Active cases</th><th>Critical Cases</th><th>New Cases</th><th>Recovered till date</th><th>Total</th></tr>"
+          );
+
+          $.ajax({
+            url: "https://restcountries.com/v3.1/all",
+            method: "GET",
+            dataType: "JSON",
+            success: function (countries) {
+              $.each(countries, function (index, countryRows) {
+                //console.log(countryRows);
+                if (
+                  countryRows.name.common.toLowerCase() ==
+                  $("#country-name").val().toLowerCase()
+                ) {
+                  console.log(countryRows);
+                  output += "<tr><td>" + countryRows.name.common + "</td>";
+                  output += "<td>" + countryRows.region + "</td>";
+                  output += "<td>" + countryRows.area + " Km²</td>";
+                  output += "<td><img id='country-flag' src=''>" + "</td>";
+                  var langName = Object.keys(countryRows.name.nativeName)[0];
+                  //console.log(langName);
+                  output +=
+                    "<td>" +
+                    countryRows.name.nativeName[langName].official +
+                    "</td>";
+                  if(countryRows.hasOwnProperty("borders")){
+                    output+="<td>";
+                    $.each(countryRows.borders, function(index, borderRows){
+                      $.each(countries, function(index, borderCountryRows){
+                        if(borderCountryRows.cca3.toLowerCase() == borderRows.toLowerCase()){
+                          output +=  borderCountryRows.name.common + "<br>";
+                        }
+                      })
+                      
+
+                    })
+                    output+="</td>";
+                  }
+                  else{
+                    output += "<td>" + "No border data available" + "</td>";
+                  }
+                  
+                  icon = countryRows.flags.svg;
+                  //console.log(covidData);
+
+                  $.ajax({
+                    async: true,
+                    crossDomain: true,
+                    url: "https://covid-193.p.rapidapi.com/statistics",
+                    method: "GET",
+                    headers: {
+                      "X-RapidAPI-Host": "covid-193.p.rapidapi.com",
+                      "X-RapidAPI-Key":
+                        "ea303d59b9mshf8dff2a15c665e1p16a2f9jsnd7b1eb6b1957",
+                    },
+                    success: function (covidData) {
+                      $.each(
+                        covidData.response,
+                        function (index, covidDataRows) {
+                          //console.log(covidDataRows);
+                          if (
+                            countryRows.name.common.toLowerCase() ==
+                            covidDataRows.country.toLowerCase()
+                          ) {
+                            console.log(covidDataRows.cases);
+                            output +=
+                              "<td>" + covidDataRows.cases[Object.keys(covidDataRows.cases)[0]] + "</td>";
+                            output +=
+                              "<td>" + covidDataRows.cases.active + "</td>";
+                            output +=
+                              "<td>" + covidDataRows.cases.critical + "</td>";
+                            output +=
+                              "<td>" + covidDataRows.cases.new + "</td>";
+                            output +=
+                              "<td>" + covidDataRows.cases.recovered + "</td>";
+                            output +=
+                              "<td>" + covidDataRows.cases.total + "</td></tr>";
+                            //console.log(output);
+                            $("#data-table").append(output);
+                            $("#country-flag")
+                              .attr("src", icon)
+                              .css({ width: "6em", height: "4em" });
+                          }
+                        }
+                      );
+                    },
+                  });
+                }
+                //console.log(output);
+              });
+            },
+          });
+        });
+      });
+    </script>
+    <div class="container">
+      <div class="input-group mb-3">
+        <input
+          type="text"
+          class="form-control"
+          id="country-name"
+          placeholder="Country name"
+          aria-label="Recipient's username"
+          aria-describedby="basic-addon2"
+        />
+        <div class="input-group-append">
+          <button class="btn btn-outline-secondary" type="button">
+            GetCountryDetails
+          </button>
+        </div>
+      </div>
+
+      <table id="data-table" class="table table-striped table-dark"></table>
+    </div>
+    <script
+      src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js"
+      integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js"
+      integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+      crossorigin="anonymous"
+    ></script>
+  </body>
+</html>
